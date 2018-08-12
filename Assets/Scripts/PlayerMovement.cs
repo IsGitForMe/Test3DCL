@@ -15,14 +15,23 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField]
     public GameObject playerHead;
     [SerializeField]
-    private GameObject playerBow;
-    [SerializeField]
     private GameObject playerHitBarText;
+    [SerializeField]
+    public GameObject playerAxe;
+    [SerializeField]
+    public GameObject playerBow;
+    [SerializeField]
+    public GameObject playerHook;
+    //Slots are filled by game progress
+    public GameObject[] playerSlots = new GameObject[slotsCount];
+    [SerializeField]
+    private GameObject playerArm;
     #endregion
     #region PlayerStats
     [SerializeField]
     public int MaxHitPoints = 10;
     public int realHitPoints;
+    static public int slotsCount = 5;
     #endregion
     #region ArrowStats
     GameObject[] Arrows;
@@ -41,14 +50,15 @@ public class PlayerMovement : MonoBehaviour
     //Transform LastPlace;
     #endregion
     [SerializeField]
-    GameObject PlayerWithAxe;
-    [SerializeField]
     float groundCheckRadius;
     private Rigidbody rb;
+    private int selectedSlot = 0;
+    public bool canMove = true;
     // Use this for initialization
     void Start()
     {
-        PlayerWithAxe.SetActive(false);
+        //PlayerWithAxe.SetActive(false);
+        playerAxe.SetActive(false);
         tickArrowBegin = Environment.TickCount;
         rb = GetComponent<Rigidbody>();
         Arrows = new GameObject[arrowsPoolCount];
@@ -64,6 +74,10 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     private void GroundMotion()
     {
+        if (!canMove)
+        {
+            return;
+        }
         float moveHorizontal = Input.GetAxis("Horizontal");
         float moveVertical = Input.GetAxis("Vertical");
         if (moveVertical > 0)
@@ -162,20 +176,25 @@ public class PlayerMovement : MonoBehaviour
         transform.localEulerAngles = new Vector3(0, transform.localEulerAngles.y, transform.localEulerAngles.z);
         transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, 0);
     }
+    #region JumpProperties
     private bool GroundCheck()
     {
-        return Physics.Raycast(transform.position, -transform.up,groundCheckRadius, 1 << LayerMask.NameToLayer("Ground"));
+        return Physics.Raycast(transform.position, -transform.up, groundCheckRadius, 1 << LayerMask.NameToLayer("Ground"));
+    }
+    private bool LiftCheck()
+    {
+        return Physics.Raycast(transform.position, -transform.up, groundCheckRadius, 1 << LayerMask.NameToLayer("Lift"));
     }
     private void VerticalJump()
     {
-        bool IsGrounded = GroundCheck();
         bool IsJumped = Input.GetKeyDown(KeyCode.Space);
-        if (IsJumped && IsGrounded)
+        if (IsJumped && (GroundCheck() || LiftCheck()))
         {
             //Debug.Log("Jump");
-            rb.AddForce(new Vector3(0,100 * jumpSpeed,0));
+            rb.AddForce(new Vector3(0, 100 * jumpSpeed, 0));
         }
     }
+    #endregion
     private void CameraVision()
     {
         float MouseAxisX = Input.GetAxis("Mouse Y");
@@ -194,35 +213,49 @@ public class PlayerMovement : MonoBehaviour
         arrRb.AddForce(-delta * arrowShotPower);
         arr.GetComponent<ArrowScript>().SetArrowDamage(arrowDamage);
     }
-    private void ArrowShotHandler()
-    {
-        bool IsShot = Input.GetKeyDown(KeyCode.Mouse0);
-        if (IsShot&&arrowQivCount > 0)
-        {
-            int tickUpdate = Environment.TickCount;
-            if (tickUpdate - tickArrowBegin > arrowReload * 1000)
-            {
-                GameObject arr = Arrows[_arrowPoolPosition];
-                GetComponent<AudioSource>().Play();
-                ArrowPoolHandler(arr);
-                tickArrowBegin = tickUpdate;
-                arrowQivCount--;
-                Debug.Log(arrowQivCount);
-            }
-        }
-    }
-    private void WeaponSwapHandler()
-    {
-        bool wantSwap = Input.GetKeyDown(KeyCode.Alpha2);
-        if (wantSwap)
-        {
-            gameObject.SetActive(false);
-            PlayerWithAxe.SetActive(true);
-            PlayerWithAxe.transform.position = gameObject.transform.position;
-            PlayerWithAxe.transform.rotation = gameObject.transform.rotation;
-            PlayerWithAxe.GetComponent<PlayerMovementAxe>().playerHead.transform.localEulerAngles = playerHead.transform.localEulerAngles;
-        }
-    }
+    //private void ArrowShotHandler()
+    //{
+    //    bool IsShot = Input.GetKeyDown(KeyCode.Mouse0);
+    //    if (IsShot&&arrowQivCount > 0)
+    //    {
+    //        int tickUpdate = Environment.TickCount;
+    //        if (tickUpdate - tickArrowBegin > arrowReload * 1000)
+    //        {
+    //            GameObject arr = Arrows[_arrowPoolPosition];
+    //            GetComponent<AudioSource>().Play();
+    //            ArrowPoolHandler(arr);
+    //            tickArrowBegin = tickUpdate;
+    //            arrowQivCount--;
+    //            Debug.Log(arrowQivCount);
+    //        }
+    //    }
+    //}
+    //private void WeaponSwapHandler()
+    //{
+    //    bool wantSwap = Input.GetKeyDown(KeyCode.Alpha2);
+    //    if (wantSwap)
+    //    {
+    //        playerBow.SetActive(false);
+    //        playerAxe.SetActive(true);
+    //        //gameObject.SetActive(false);
+    //        //PlayerWithAxe.SetActive(true);
+    //        //PlayerWithAxe.transform.position = gameObject.transform.position;
+    //        //PlayerWithAxe.transform.rotation = gameObject.transform.rotation;
+    //        //PlayerWithAxe.GetComponent<PlayerMovementAxe>().playerHead.transform.localEulerAngles = playerHead.transform.localEulerAngles;
+    //    }
+    //}
+    //private void AxeStrike()
+    //{
+    //    bool WantStrike = Input.GetKeyDown(KeyCode.Mouse0);
+    //    if (WantStrike)
+    //    {
+    //        if (playerAxe.GetComponent<AxeMove>().strikeCheck == false)
+    //        {
+    //            playerAxe.GetComponent<AxeMove>().strikeCheck = true;
+
+    //        }
+    //    }
+    //}
     private void InteractHandler()
     {
         bool IsAct = Input.GetKeyDown(KeyCode.E);
@@ -241,20 +274,112 @@ public class PlayerMovement : MonoBehaviour
     {
         realHitPoints = realHitPoints - damage;
     }
-    public void PlayerDeath()
+    private void PlayerDeath()
     {
 
     }
+    bool isLiftChild = true;
+    private void IsLifted()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, -transform.up, out hit, 0.6f, 1 << LayerMask.NameToLayer("Lift")))
+        {
+            gameObject.transform.SetParent(hit.transform);
+            isLiftChild = true;
+        }
+        else if (isLiftChild)
+        {
+            gameObject.transform.SetParent(null);
+            isLiftChild = false;
+        }
+        //Collider[] col = Physics.OverlapSphere(transform.position,1.2f,1 << LayerMask.NameToLayer("Lift"));
+        //if (col.Length != 0)
+        //{
+        //    gameObject.transform.SetParent(col[0].transform);
+        //}
+        //else
+        //{
+        //    gameObject.transform.SetParent(null);
+        //}
+    }
+    private void SlotSelector(int slot)
+    {
+        if (playerSlots[selectedSlot] != null)
+        {
+            playerSlots[selectedSlot].SetActive(false);
+        }
+        if (playerSlots[slot] == null)
+        {
+            return;
+        }
+        playerSlots[slot].SetActive(true);
+        //playerSlots[0].GetComponent<Interact>().SlotSelect();
+        //playerSlots[0].transform.SetParent(gameObject.transform);
+        selectedSlot = slot;
+    }
+    private void SlotSwapHandler()
+    {
+        bool slot1 = Input.GetKeyDown(KeyCode.Alpha1);
+        bool slot2 = Input.GetKeyDown(KeyCode.Alpha2);
+        bool slot3 = Input.GetKeyDown(KeyCode.Alpha3);
+        bool slot4 = Input.GetKeyDown(KeyCode.Alpha4);
+        bool slot5 = Input.GetKeyDown(KeyCode.Alpha5);
+
+        if (slot1)
+        {
+            SlotSelector(0);
+        }
+        else if (slot2)
+        {
+            SlotSelector(1);
+        }
+        else if (slot3)
+        {
+            SlotSelector(2);
+        }
+        else if (slot4)
+        {
+            SlotSelector(3);
+        }
+        else if (slot5)
+        {
+            SlotSelector(4);
+        }
+    }
+    private void SelectedPrimaryAction()
+    {
+
+    }
+    private void GrappingHookHandler()
+    {
+        bool wantHook = Input.GetKeyDown(KeyCode.Q);
+        if (wantHook)
+        {
+            playerHook.SetActive(true);
+            //Debug.Log("Hook");
+            playerHook.GetComponent<GrapAndHook>().IsHookShot = true;
+        }
+        if (playerHook.GetComponent<GrapAndHook>().IsHookGrap)
+        {
+            playerHook.GetComponent<GrapAndHook>().Hook.transform.SetParent(null);
+            gameObject.GetComponent<Rigidbody>().Sleep();
+            gameObject.GetComponent<BoxCollider>().size = new Vector3(0, 0, 0);
+            canMove = false;
+        }
+        
+    }
     void Update()
     {
-        WeaponSwapHandler();
-        ArrowShotHandler();
+        GrappingHookHandler();
+        SelectedPrimaryAction();
+        SlotSwapHandler();
         GroundMotion();
         VisionHorizontalMove();
         VerticalJump();
         CameraVision();
         InteractHandler();
         PlayerDeath();
+        IsLifted();
     }
 }
 //Debug.DrawRay(transform.position,)

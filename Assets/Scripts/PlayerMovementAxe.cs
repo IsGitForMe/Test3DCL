@@ -16,16 +16,20 @@ public class PlayerMovementAxe : MonoBehaviour
     public GameObject playerHead;
     [SerializeField]
     private GameObject playerAxe;
+    [SerializeField]
+    private GameObject playerHook;
     #endregion    
     [SerializeField]
     GameObject PlayerWithBow;
     [SerializeField]
     float groundCheckRadius;
     private Rigidbody rb;
+    bool isLiftChild = true;
     // Use this for initialization
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        playerHook.SetActive(false);
     }
     /// <summary>
     /// w,a,s,d ground motion
@@ -130,20 +134,25 @@ public class PlayerMovementAxe : MonoBehaviour
         transform.localEulerAngles = new Vector3(0, transform.localEulerAngles.y, transform.localEulerAngles.z);
         transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, 0);
     }
+    #region JumpProperties
     private bool GroundCheck()
     {
         return Physics.Raycast(transform.position, -transform.up, groundCheckRadius, 1 << LayerMask.NameToLayer("Ground"));
     }
+    private bool LiftCheck()
+    {
+        return Physics.Raycast(transform.position, -transform.up, groundCheckRadius, 1 << LayerMask.NameToLayer("Lift"));
+    }
     private void VerticalJump()
     {
-        bool IsGrounded = GroundCheck();
         bool IsJumped = Input.GetKeyDown(KeyCode.Space);
-        if (IsJumped && IsGrounded)
+        if (IsJumped && (GroundCheck() || LiftCheck()))
         {
             //Debug.Log("Jump");
             rb.AddForce(new Vector3(0, 100 * jumpSpeed, 0));
         }
     }
+    #endregion
     private void CameraVision()
     {
         float MouseAxisX = Input.GetAxis("Mouse Y");
@@ -186,7 +195,42 @@ public class PlayerMovementAxe : MonoBehaviour
 
             }
         }
-        
+    }
+    private void IsLifted()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position,-transform.up,out hit,0.6f,1 << LayerMask.NameToLayer("Lift")))
+        {
+            gameObject.transform.SetParent(hit.transform);
+            isLiftChild = true;
+        }
+        else if (isLiftChild)
+        {
+            gameObject.transform.SetParent(null);
+            isLiftChild = false;
+        }
+        //Collider[] col = Physics.OverlapSphere(transform.position, 1.2f, 1 << LayerMask.NameToLayer("Lift"));
+        //if (col.Length != 0)
+        //{
+        //    gameObject.transform.SetParent(col[0].transform);
+        //}
+        //else
+        //{
+        //    gameObject.transform.SetParent(null);
+        //}
+    }
+    private void GrappingHookHandler()
+    {
+        bool wantHook = Input.GetKeyDown(KeyCode.Q);
+        if (wantHook)
+        {
+            playerHook.SetActive(true);
+            if (Physics.Raycast(playerHead.transform.position, playerHead.transform.forward, 20, 1 << LayerMask.NameToLayer("Ground")))
+            {
+                playerHook.GetComponentInChildren<GameObject>(GameObject.Find("Hook"));
+                GameObject.Find("Hook");
+            }
+        }
     }
     void Update()
     {
@@ -197,5 +241,7 @@ public class PlayerMovementAxe : MonoBehaviour
         CameraVision();
         AxeStrike();
         InteractHandler();
+        IsLifted();
+        GrappingHookHandler();
     }
 }

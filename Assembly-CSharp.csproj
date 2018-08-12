@@ -50,9 +50,13 @@
      <Compile Include="Assets\Scripts\AxeMove.cs" />
      <Compile Include="Assets\Scripts\ButtonClick.cs" />
      <Compile Include="Assets\Scripts\EnemyMove.cs" />
+     <Compile Include="Assets\Scripts\GrapAndHook.cs" />
+     <Compile Include="Assets\Scripts\HookCheck.cs" />
+     <Compile Include="Assets\Scripts\Interact.cs" />
      <Compile Include="Assets\Scripts\LiftMovement.cs" />
      <Compile Include="Assets\Scripts\PlayAudio.cs" />
      <Compile Include="Assets\Scripts\PlayerFall.cs" />
+     <Compile Include="Assets\Scripts\PlayerFind.cs" />
      <Compile Include="Assets\Scripts\PlayerMovement.cs" />
      <Compile Include="Assets\Scripts\PlayerMovementAxe.cs" />
  <Reference Include="UnityEngine.UI">

@@ -8,7 +8,7 @@ public class LiftMovement : MonoBehaviour {
     [SerializeField]
     bool IsLiftMoveUp = false;
     [SerializeField]
-    int LiftSpeed = 1;
+    float LiftSpeed = 1;
     [SerializeField]
     GameObject StartPosition;
     [SerializeField]
@@ -17,6 +17,7 @@ public class LiftMovement : MonoBehaviour {
     GameObject Platform;
     Vector3 startPosition;
     Vector3 endPosition;
+    Vector3 direction;
     bool buttonClicked = false;
     bool liftOnMove = false;
     void Start ()
@@ -25,6 +26,8 @@ public class LiftMovement : MonoBehaviour {
         {
             startPosition = StartPosition.transform.position;
             endPosition = EndPosition.transform.position;
+            direction = endPosition - startPosition;
+            Debug.Log(direction+" direction");
         }
         else
         {
@@ -40,14 +43,15 @@ public class LiftMovement : MonoBehaviour {
             IsLiftMoveUp = !IsLiftMoveUp;
         }
     }
+    private float t = 0;
 	void Update ()
     {
-        if (IsLiftMoveUp&&buttonClicked)
+        if (IsLiftMoveUp && buttonClicked)
         {
-            if (Platform.transform.position.y < endPosition.y)
+            if (Platform.transform.position != endPosition)
             {
-                float y = LiftSpeed * Time.deltaTime;
-                Platform.transform.position = Platform.transform.position + new Vector3(0, y, 0);
+                t = t + Time.deltaTime;
+                Platform.transform.position = Vector3.Lerp(startPosition,endPosition, t / 2 * LiftSpeed);
             }
             else
             {
@@ -57,18 +61,18 @@ public class LiftMovement : MonoBehaviour {
         }
         else if (buttonClicked)
         {
-            if (Platform.transform.position.y > startPosition.y)
+            if (Platform.transform.position != startPosition)
             {
-                float y = LiftSpeed * Time.deltaTime;
-                Platform.transform.position = Platform.transform.position + new Vector3(0, -y, 0);
+                t = t - Time.deltaTime;
+                Platform.transform.position = Vector3.Lerp(startPosition, endPosition, t / 2 * LiftSpeed);
             }
             else
             {
                 liftOnMove = false;
                 buttonClicked = false;
             }
-            
+
         }
-	}
+    }
 }
 //Обнести условиями Х-ы и  Z-ы для  равномерного перемещения между точками.

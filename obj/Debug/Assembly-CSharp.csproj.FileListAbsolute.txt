@@ -29,3 +29,4 @@ D:\programUN\Test3D\Temp\bin\Debug\UnityEngine.VR.xml
 D:\programUN\Test3D\obj\Debug\Assembly-CSharp.csprojResolveAssemblyReference.cache
 D:\programUN\Test3D\obj\Debug\Assembly-CSharp.dll
 D:\programUN\Test3D\obj\Debug\Assembly-CSharp.pdb
+D:\programUN\Test3D\Temp\bin\Debug\Dlls.dll
