@@ -57,6 +57,11 @@ public class GrapAndHook : MonoBehaviour {
                 IsHookGrap = true;
             }
         }
+        if (IsHookGrap)
+        {
+            Hook.transform.SetParent(null);
+            Player.GetComponent<PlayerMovement>().canMove = false;
+        }
         playerPosInterpol = playerPosInterpol + Time.deltaTime / 2;
         //Debug.Log(Time.deltaTime);
         if (playerStartPos == null)

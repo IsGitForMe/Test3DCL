@@ -54,6 +54,9 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody rb;
     private int selectedSlot = 0;
     public bool canMove = true;
+    [SerializeField]
+    GameObject Bomb;
+    GameObject bomb;
     // Use this for initialization
     void Start()
     {
@@ -357,16 +360,38 @@ public class PlayerMovement : MonoBehaviour
         {
             playerHook.SetActive(true);
             //Debug.Log("Hook");
+            if (playerHook.GetComponent<GrapAndHook>().IsHookGrap)
+            {
+                return;
+            }
             playerHook.GetComponent<GrapAndHook>().IsHookShot = true;
         }
-        if (playerHook.GetComponent<GrapAndHook>().IsHookGrap)
+    }
+    Vector3 destination;
+    private void FShot()
+    {
+        bool IsShot = Input.GetKeyDown(KeyCode.F);
+        if (!IsShot)
         {
-            playerHook.GetComponent<GrapAndHook>().Hook.transform.SetParent(null);
-            gameObject.GetComponent<Rigidbody>().Sleep();
-            gameObject.GetComponent<BoxCollider>().size = new Vector3(0, 0, 0);
-            canMove = false;
+            return;
         }
-        
+        bomb = Instantiate(Bomb,playerHead.transform.position + playerHead.transform.forward,playerHead.transform.rotation);
+        destination = playerHead.transform.forward;
+
+    }
+    private void BombFly()
+    {
+        if (bomb != null)
+        {
+            if (!Physics.Raycast(bomb.transform.position,bomb.transform.forward,0.5f,1 << LayerMask.NameToLayer("Ground")))
+            {
+                bomb.transform.position = bomb.transform.position + destination / 1f;
+            }
+            else
+            {
+                //bomb = null;
+            }
+        }
     }
     void Update()
     {
@@ -380,6 +405,8 @@ public class PlayerMovement : MonoBehaviour
         InteractHandler();
         PlayerDeath();
         IsLifted();
+        FShot();
+        BombFly();
     }
 }
 //Debug.DrawRay(transform.position,)

@@ -20,6 +20,6 @@ public class HookCheck : MonoBehaviour {
 
     public bool GroundGrap()
     {
-        return Physics.Raycast(transform.position, transform.forward, 1.5f, 1 << LayerMask.NameToLayer("Ground"));
+        return Physics.Raycast(transform.position, transform.forward, 0.5f, 1 << LayerMask.NameToLayer("Ground"));
     }
 }
